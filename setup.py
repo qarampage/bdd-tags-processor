@@ -16,7 +16,7 @@ setup(
     install_requires=[],
     keywords="bdd cucumber tag expression processor filter feature files",
     classifiers=[
-        "License :: OSI Approved :: GNU GENERAL PUBLIC LICENSE",
+        "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
         "Programming Language :: Python :: 3.9",
     ],
     entry_points={
