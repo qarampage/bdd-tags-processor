@@ -1,11 +1,9 @@
-import logging
+import argparse
 import os
 import re
 import sys
 from glob import glob
 from pathlib import Path
-
-logging.basicConfig(level=logging.INFO)
 
 user_ands = []
 user_ors = []
@@ -35,52 +33,27 @@ def process_tags_expression(user_tag_expression):
     # remove the unwanted and in the no_run_list
     no_run_list = [item.lstrip('and ~') for item in no_run_list]
 
+    # Process user expression
     if 'and (' in copyUserArgs:
         andBracket = copyUserArgs.split('and (')
         andAry = andBracket[0].split('and')
-        if len(andAry) == 1 and andAry[0] == '':
-            pass
-        else:
-            for strItm in andAry:
-                if len(strItm.strip()) > 0:
-                    if not strItm.strip().startswith('@'):
-                        print('Incorrect Expression in ANDs')
-                        sys.exit(1)
-                    user_ands.append(strItm.strip())
+        andAry = [strItm.strip() for strItm in andAry if strItm.strip().startswith('@')]
+        user_ands.extend(andAry)
 
         orAry = andBracket[1].split(' or ')
-        if len(orAry) == 1 and orAry[0] == '':
-            pass
-        else:
-            for strItm in orAry:
-                if not strItm.strip().startswith('@'):
-                    print('Incorrect Expression in ORs')
-                    sys.exit(1)
-                user_ors.append(strItm.strip())
+        orAry = [strItm.strip() for strItm in orAry if strItm.strip().startswith('@')]
+        user_ors.extend(orAry)
 
     elif 'or' in copyUserArgs:
         orAry = copyUserArgs.split('or ')
-        if len(orAry) == 1 and orAry[0] == '':
-            pass
-        else:
-            for strItm in orAry:
-                if len(strItm.strip()) > 0 and not strItm.strip().startswith('@'):
-                    print('Incorrect Expression in ORs')
-                    sys.exit(1)
-                user_ors.append(strItm.strip())
+        orAry = [strItm.strip() for strItm in orAry if strItm.strip().startswith('@')]
+        user_ors.extend(orAry)
 
     else:
         if copyUserArgs.strip() != '':
             andAry = copyUserArgs.split('and ')
-            if len(andAry) == 1 and andAry[0] == '':
-                pass
-            else:
-                for strItm in andAry:
-                    if len(strItm.strip()) > 0:
-                        if not strItm.strip().startswith('@'):
-                            print('Incorrect Expression in ANDs')
-                            sys.exit(1)
-                        user_ands.append(strItm.strip())
+            andAry = [strItm.strip() for strItm in andAry if strItm.strip().startswith('@')]
+            user_ands.extend(andAry)
 
 
 def filter_feature_and_scenarios(features_dir, result_dir, tags):
@@ -154,14 +127,13 @@ def filter_feature_and_scenarios(features_dir, result_dir, tags):
             with open(f'{filename_head}.feature', 'w', encoding='utf-8') as result:
                 result.writelines(sequence_cases)
 
-    logging.info(f'{total_scenarios} Scenarios found in {total_features} Features files')
+    print(f'{total_scenarios} Scenarios found in {total_features} Features files')
 
     return total_scenarios
 
 
-
 def main():
-
+    args = None
     test_expressions = ['{@web}', '  {  @web    and @regression    and ~@norun}', '{~@norun and @web and (@test1 or @test2)}',
                         '{~@norun and (@test1 or @test2)}', '{@web and ~@browser and @sanity and ~@norun}', '{~@norun}', '{@sanity or @regression}',
                         '{@web and @browser and ~@norun and (@regression or @Sanity)}', '{@web and ~@norun and (@regression or @Sanity)}',
@@ -169,31 +141,63 @@ def main():
                         '{  ~@web   and   @browser   and   @checkout   and    @norun and (  @test1   or   @test2    )}',
                         '{  @web   and   @regression   and    @norun and (  @test1   or   @test2    )}', '{@web and (@regression or @Sanity)}',
                         '{  @web   and   ~@browser   and   ~@checkout   and    @norun and (  @regression   or   @Sanity    )}',
-                        '{@web and ~@norun and (@p1)}', '@web', '', '{~@test-2}', '{~@norun and @web}']
+                        '{@web and ~@norun and (@p1)}', '@web', '', '{~@test-2}', '{~@norun and @web}',
+                        '{@web and @browser and ~@norun and (@regression or @Sanity or @titan-ic-ship)}',
+                        '{@web-browser and @browser-desktop and ~@no-run and (@regression or @Sanity or @titan-ic-ship)}']
 
+    try:
+        parser = argparse.ArgumentParser(description='Allows the user to run either (1)Veriy-Tags or (2)Verify-Tags-Extract-Files')
+        parser.add_argument('argopt', type=int, help='Specify which option you want to run')
+        parser.add_argument("argparam", type=str, nargs="?", default=None, help="Tag Expression")
+
+        args = parser.parse_args()
+    except SystemExit:
+        print('To test only Tag Expression Processor, please choose: ')
+        print('\t $ python bdd_tags_expression_processor.py 1')
+        print('\t $ python bdd_tags_expression_processor.py 1 "{@web}"')
+        print('To test filtering Feature files based on Tag Expression, please choose: ')
+        print('\t $ python bdd_tags_expression_processor.py 2')
+        print('\t $ python bdd_tags_expression_processor.py 2 "{@web}"')
+        sys.exit(1)
+
+    argopt = args.argopt
+    argparam = args.argparam
 
     def verify_sample_tag_expressions(one_sample_tag=None):
         if one_sample_tag is None:
+            print('Considering all the expression from the sample test_expressions provided in the code')
             for expression in test_expressions:
                 process_tags_expression(expression)
-                print(f'Given expression: {expression}\n\t Result: --> NORUNs: {no_run_list},  ANDs: {user_ands}, ORs: {user_ors}')
+                print(f'\nGiven expression: {expression}\n\t Result: --> NORUNs: {no_run_list},  ANDs: {user_ands}, ORs: {user_ors}')
         else:
+            print('Considering the given expression as everything available')
             process_tags_expression(one_sample_tag)
-            print(f'NORUNs: {no_run_list},  ANDs: {user_ands}, ORs: {user_ors}')
+            print(f'Given expression: {one_sample_tag}\n\t Result: --> NORUNs: {no_run_list},  ANDs: {user_ands}, ORs: {user_ors}')
 
-
-    def verify_extracted_files(input_path: str, output_path: str, one_sample_tag: str = None):
+    def verify_extracted_files(input_path: str, output_path: str, one_sample_tag=None):
         if one_sample_tag is None:
             for expression in test_expressions:
-                filter_feature_and_scenarios('feature', 'features/final', expression)
-                print(f' {expression} ... completed.. please check files')
+                filter_feature_and_scenarios(input_path, output_path, expression)
+                print(f'{expression} ... completed.. please check files\n')
         else:
             filter_feature_and_scenarios(input_path, output_path, one_sample_tag)
             print(f' {one_sample_tag} ... completed.. please check files')
 
+    if argopt == 1:
+        if argparam:
+            verify_sample_tag_expressions(argparam)
+        else:
+            verify_sample_tag_expressions(test_expressions)
+    elif argopt == 2:
+        print("Ensure that you have input_path='features/web', output_path='features/final'. Default assumption is not created")
+        input("Do you want to continue? (yes/no): ").strip().lower()
+        if argparam:
+            verify_extracted_files(input_path='features/web', output_path='features/final', one_sample_tag=argparam)
+        else:
+            verify_extracted_files(input_path='features/web', output_path='features/final')
+    else:
+        print('Choose only from 1 or 2 as choices in the argument')
 
-    verify_sample_tag_expressions()
-    verify_extracted_files(input_path='features/scenarios/web', output_path='features/final')
 
 if __name__ == '__main__':
     main()
