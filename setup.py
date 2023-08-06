@@ -5,8 +5,8 @@ with open("README.md", "r") as f:
 
 setup(
     name="bdd_tags_processor",
-    version="0.1.0",
-    description="Filter Feature-Files based on Scenario Tag expressions",
+    version="0.2.0",
+    description="Filter Cucumber BDD Feature files based on Scenario Tag expressions",
     long_description=long_description,
     long_description_content_type="text/markdown",
     author="QA Rampage",
