@@ -5,7 +5,7 @@ with open("README.md", "r") as f:
 
 setup(
     name="bdd_tags_processor",
-    version="0.2.0",
+    version='0.2.1',
     description="Filter Cucumber BDD Feature files based on Scenario Tag expressions",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -15,8 +15,8 @@ setup(
     packages=find_packages(),
     install_requires=[],
     keywords="bdd cucumber tag expression processor filter feature files",
+    license="GPL-3.0-or-later",
     classifiers=[
-        "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
         "Programming Language :: Python :: 3.9",
     ],
     entry_points={

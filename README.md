@@ -75,3 +75,13 @@ Given expression: {~@test-2}
 Given expression: {~@norun and @web}
 	 Result: --> NoRuns: ['@norun'],  Ands: ['@web'], Ors: []
 ```
+
+
+## HOW-TO Execute on CLI
+```
+$ cd $HOME/$projects/pypi-projects/bdd-tags-processor
+$ python3 -m bdd_tags_processor.bdd_tags_expression_processor 1 '{  @web   and   ~@browser   and   ~@checkout   and    @norun and (  @regression   or   @Sanity    )}'
+Given expression: {  @web   and   ~@browser   and   ~@checkout   and    @norun and (  @regression   or   @Sanity    )}
+	Result: --> NORUNs: ['@browser', '@checkout'],  ANDs: ['@web', '@norun'], ORs: ['@regression', '@Sanity']
+```
+
